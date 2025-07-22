@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rise & Reclaim: Interactive Healing Journal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Warm Serenity -->
+    <!-- Application Structure Plan: A tab-based SPA with a top navigation bar linking to three main sections: 'Home' (introduction), 'Daily Journal' (an interactive form with a dynamic self-check-in chart), and 'Peace Corner Kit' (a collection of interactive tools derived from the source printables). This structure separates the core activities (journaling vs. using tools) for a clearer user flow and avoids a long, static scroll. It prioritizes active engagement over passive reading, making the content more effective as a digital tool. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Self-Check-In text fields. -> Goal: Provide dynamic self-assessment. -> Viz/Presentation: Interactive sliders and a Chart.js Polar Area Chart. -> Interaction: User adjusts sliders, chart updates in real-time. -> Justification: Translates static text input into an immediate, insightful visual representation of the user's state, enhancing self-awareness. -> Library: Chart.js.
+        - Report Info: Gratitude Jar Slips. -> Goal: Simulate the act of collecting gratitude notes. -> Viz/Presentation: A styled 'jar' container and an input form. -> Interaction: User types a note, clicks 'Add', and the note appears as a styled element inside the jar. -> Justification: Creates a more engaging and rewarding experience than a simple text field. -> Library/Method: Vanilla JS DOM manipulation.
+        - Report Info: Emotion Chart. -> Goal: Help users identify and understand feelings. -> Viz/Presentation: An interactive grid of clickable emotion cards. -> Interaction: Clicking a card reveals a brief, helpful description or thought. -> Justification: Turns a static reference chart into an exploratory learning tool. -> Library/Method: HTML/CSS/JS.
+        - Report Info: Printables (Posters, Checklists). -> Goal: Make tools usable directly within the app. -> Viz/Presentation: Styled HTML content with interactive checkboxes and 'Print' buttons. -> Interaction: Users can check off items; a print button uses JS to print a clean version of just that specific tool. -> Justification: Increases the utility of the tools in a digital context. -> Library/Method: HTML/JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #FFF8F7;
+            color: #4a4a4a;
+        }
+        h1, h2, h3 {
+            font-family: 'Lora', serif;
+        }
+        .nav-link {
+            @apply px-4 py-2 text-slate-600 hover:text-purple-700 hover:bg-purple-100 rounded-md transition-all duration-300;
+        }
+        .nav-link.active {
+            @apply text-purple-800 bg-purple-200 font-semibold;
+        }
+        .content-section {
+            @apply hidden;
+        }
+        .content-section.active {
+            @apply block;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .print-area, .print-area * {
+                visibility: visible;
+            }
+            .print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="bg-rose-50 text-slate-700">
+
+    <header class="bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold text-purple-800">Rise & Reclaim</h1>
+            <div class="flex items-center space-x-1 sm:space-x-2 text-sm sm:text-base">
+                <a href="#home" class="nav-link active">Home</a>
+                <a href="#journal" class="nav-link">Daily Journal</a>
+                <a href="#peace-corner" class="nav-link">Peace Corner</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        
+        <!-- Home Section -->
+        <section id="home" class="content-section active">
+            <div class="text-center bg-white p-8 rounded-xl shadow-lg border border-purple-100">
+                <img src="https://placehold.co/200x200/F5E0D8/6B4F4F?text=Brave+Mama+Co." alt="Brave Mama Co. Logo" class="mx-auto mb-4 rounded-full shadow-md">
+                <h2 class="text-3xl md:text-4xl font-bold text-purple-900 mb-2">Brave Mama Co.</h2>
+                <p class="max-w-3xl mx-auto text-purple-700 text-xl md:text-2xl font-semibold mb-6">
+                    Raising Children While Raising Yourself
+                </p>
+                <p class="max-w-3xl mx-auto text-slate-600 mb-6">
+                    "Rise & Reclaim" is your daily companion on the journey of healing. It offers tools, reflections, and encouragement to foster peace, build resilience, and empower you to create a beautiful future for yourself and your children.
+                </p>
+                <p class="max-w-3xl mx-auto text-slate-500 italic">
+                    Remember, healing is a process, not a destination. Be kind to yourself, celebrate small victories, and know that you are strong, capable, and worthy of all the peace and joy life has to offer.
+                </p>
+            </div>
+        </section>
+
+        <!-- Daily Journal Section -->
+        <section id="journal" class="content-section">
+            <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg border border-purple-100">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-purple-900">Daily Journal Entry</h2>
+                    <p class="text-slate-500 mt-2">Use this space to guide your reflections and practice self-care.</p>
+                </div>
+
+                <div id="journal-form" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Left Side: Form Inputs -->
+                    <div class="space-y-6">
+                        <div>
+                            <label for="affirmation" class="text-lg font-semibold text-slate-800 block mb-2">Daily Affirmation</label>
+                            <textarea id="affirmation" rows="3" class="w-full p-3 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-400 transition" placeholder="I am resilient. I am worthy of love and peace..."></textarea>
+                        </div>
+                        <div>
+                            <label for="prompt" class="text-lg font-semibold text-slate-800 block mb-2">Guided Prompt for Reflection</label>
+                            <p class="text-sm text-slate-500 mb-2">What is one small act of kindness I showed myself today, and how did it make me feel?</p>
+                            <textarea id="prompt" rows="4" class="w-full p-3 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-400 transition" placeholder="Your reflection..."></textarea>
+                        </div>
+                         <div>
+                            <label for="grounding" class="text-lg font-semibold text-slate-800 block mb-2">Grounding Activity</label>
+                             <p class="text-sm text-slate-500 mb-2">Engage in a simple activity to bring yourself to the present moment. Example: 5-4-3-2-1 Sensory Practice.</p>
+                            <textarea id="grounding" rows="3" class="w-full p-3 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-400 transition" placeholder="Today's grounding activity..."></textarea>
+                        </div>
+                        <div>
+                            <label for="mother-child" class="text-lg font-semibold text-slate-800 block mb-2">Mother & Child Moments</label>
+                            <textarea id="mother-child" rows="4" class="w-full p-3 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-400 transition" placeholder="Reflect on positive interactions with your child(ren)..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Right Side: Self Check-in & Chart -->
+                    <div class="space-y-6 bg-rose-50/50 p-6 rounded-lg border border-purple-100">
+                        <h3 class="text-xl font-semibold text-center text-slate-800">Self-Check-In</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="energy-level" class="flex justify-between text-sm font-medium text-slate-700"><span>Energy Level</span><span id="energy-value">3</span></label>
+                                <input type="range" id="energy-level" min="1" max="5" value="3" class="w-full h-2 bg-purple-200 rounded-lg appearance-none cursor-pointer accent-purple-600">
+                            </div>
+                            <div>
+                                <label for="mood-level" class="flex justify-between text-sm font-medium text-slate-700"><span>Positivity / Mood</span><span id="mood-value">3</span></label>
+                                <input type="range" id="mood-level" min="1" max="5" value="3" class="w-full h-2 bg-purple-200 rounded-lg appearance-none cursor-pointer accent-purple-600">
+                            </div>
+                             <div>
+                                <label for="calm-level" class="flex justify-between text-sm font-medium text-slate-700"><span>Calmness</span><span id="calm-value">3</span></label>
+                                <input type="range" id="calm-level" min="1" max="5" value="3" class="w-full h-2 bg-purple-200 rounded-lg appearance-none cursor-pointer accent-purple-600">
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="selfCheckInChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4 no-print">
+                    <button id="download-btn" class="w-full sm:w-auto bg-purple-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-purple-700 transition transform hover:scale-105">Download Entry as .txt</button>
+                    <button id="clear-btn" class="w-full sm:w-auto bg-slate-200 text-slate-700 font-bold py-2 px-6 rounded-lg hover:bg-slate-300 transition">Clear Form</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Peace Corner Section -->
+        <section id="peace-corner" class="content-section">
+             <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-purple-900">Peace Corner Kit</h2>
+                <p class="text-slate-500 mt-2">Interactive tools to help create a calming space and foster emotional well-being.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                
+                <!-- Emotion Chart -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-purple-100 space-y-4">
+                    <h3 class="text-xl font-bold text-purple-900 text-center">How Am I Feeling Today?</h3>
+                    <p class="text-center text-sm text-slate-500">Click on an emotion to learn more about it.</p>
+                    <div id="emotion-grid" class="grid grid-cols-3 gap-2 text-center">
+                        <!-- Emotions will be injected here by JS -->
+                    </div>
+                    <div id="emotion-info" class="mt-4 p-3 bg-purple-50 rounded-lg text-center text-purple-800 h-20 flex items-center justify-center">
+                        <p>Select an emotion.</p>
+                    </div>
+                </div>
+
+                <!-- Gratitude Jar -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-purple-100 flex flex-col">
+                    <h3 class="text-xl font-bold text-purple-900 text-center">Gratitude Jar</h3>
+                    <div id="gratitude-jar" class="flex-grow my-4 p-4 bg-rose-50/50 border-2 border-dashed border-purple-200 rounded-lg min-h-[150px] flex flex-wrap gap-2 content-start overflow-y-auto">
+                        <!-- Gratitude notes will be added here -->
+                    </div>
+                    <div class="mt-auto no-print">
+                        <textarea id="gratitude-input" rows="2" class="w-full p-2 border border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-400" placeholder="Today, I am grateful for..."></textarea>
+                        <button id="add-gratitude-btn" class="mt-2 w-full bg-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700 transition">Add to Jar</button>
+                    </div>
+                </div>
+
+                <!-- Mama's Checklist -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-purple-100 space-y-3 print-area-container">
+                    <div class="print-area">
+                        <h3 class="text-xl font-bold text-purple-900 text-center">Mama s Quick Grounding Checklist</h3>
+                        <ul id="grounding-checklist" class="space-y-2 mt-4">
+                           <!-- Checklist items will be injected here by JS -->
+                        </ul>
+                    </div>
+                    <button class="print-btn w-full mt-4 bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-lg hover:bg-slate-300 transition no-print">Print Checklist</button>
+                </div>
+                
+                <!-- Calming Poster -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-purple-100 print-area-container">
+                     <div class="print-area">
+                        <h3 class="text-xl font-bold text-purple-900 text-center">How I Find My Calm</h3>
+                        <ul class="mt-4 space-y-2 list-disc list-inside text-slate-600">
+                           <li>Take 3 Deep Breaths</li>
+                           <li>Count to 10</li>
+                           <li>Hug a Stuffed Animal</li>
+                           <li>Draw a Picture</li>
+                           <li>Listen to Quiet Music</li>
+                           <li>Read a Book</li>
+                           <li>Think Happy Thoughts</li>
+                           <li>Talk About My Feelings</li>
+                        </ul>
+                    </div>
+                    <button class="print-btn w-full mt-4 bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-lg hover:bg-slate-300 transition no-print">Print Poster</button>
+                </div>
+
+                <!-- Peace Corner Sign -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-purple-100 flex flex-col justify-center items-center text-center print-area-container">
+                    <div class="print-area">
+                        <h3 class="text-2xl font-bold text-purple-900">Welcome to Our Peace Corner</h3>
+                        <p class="mt-2 text-slate-600">A Place to Breathe, Feel, and Be Calm.</p>
+                        <p class="mt-1 text-slate-500 italic">Here, we find our peace together.</p>
+                    </div>
+                    <button class="print-btn w-full mt-4 bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-lg hover:bg-slate-300 transition no-print">Print Sign</button>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Navigation
+            const navLinks = document.querySelectorAll('.nav-link');
+            const contentSections = document.querySelectorAll('.content-section');
+
+            function updateActiveContent() {
+                const hash = window.location.hash || '#home';
+                
+                navLinks.forEach(link => {
+                    link.classList.toggle('active', link.getAttribute('href') === hash);
+                });
+
+                contentSections.forEach(section => {
+                    section.classList.toggle('active', section.id === hash.substring(1));
+                });
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // e.preventDefault(); // Keep default behavior to update URL hash
+                    setTimeout(updateActiveContent, 0);
+                });
+            });
+
+            window.addEventListener('hashchange', updateActiveContent);
+            updateActiveContent(); // Initial call
+
+            // Journal Section
+            const energySlider = document.getElementById('energy-level');
+            const moodSlider = document.getElementById('mood-level');
+            const calmSlider = document.getElementById('calm-level');
+            const energyValue = document.getElementById('energy-value');
+            const moodValue = document.getElementById('mood-value');
+            const calmValue = document.getElementById('calm-value');
+            const downloadBtn = document.getElementById('download-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            
+            const ctx = document.getElementById('selfCheckInChart').getContext('2d');
+            let selfCheckInChart = new Chart(ctx, {
+                type: 'polarArea',
+                data: {
+                    labels: ['Energy', 'Positivity', 'Calmness'],
+                    datasets: [{
+                        data: [3, 3, 3],
+                        backgroundColor: [
+                            'rgba(255, 159, 64, 0.5)',
+                            'rgba(75, 192, 192, 0.5)',
+                            'rgba(153, 102, 255, 0.5)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 159, 64, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: false
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 5,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            enabled: true
+                        }
+                    }
+                }
+            });
+
+            function updateChart() {
+                const energy = parseInt(energySlider.value);
+                const mood = parseInt(moodSlider.value);
+                const calm = parseInt(calmSlider.value);
+                energyValue.textContent = energy;
+                moodValue.textContent = mood;
+                calmValue.textContent = calm;
+                selfCheckInChart.data.datasets[0].data = [energy, mood, calm];
+                selfCheckInChart.update();
+            }
+
+            [energySlider, moodSlider, calmSlider].forEach(slider => slider.addEventListener('input', updateChart));
+
+            clearBtn.addEventListener('click', () => {
+                document.getElementById('affirmation').value = '';
+                document.getElementById('prompt').value = '';
+                document.getElementById('grounding').value = '';
+                document.getElementById('mother-child').value = '';
+                energySlider.value = 3;
+                moodSlider.value = 3;
+                calmSlider.value = 3;
+                updateChart();
+            });
+
+            downloadBtn.addEventListener('click', () => {
+                const date = new Date();
+                const dateString = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                
+                const content = `
+Rise & Reclaim Journal Entry
+Date: ${dateString}
+---------------------------------
+
+## Daily Affirmation
+${document.getElementById('affirmation').value}
+
+## Guided Prompt: What is one small act of kindness I showed myself today?
+${document.getElementById('prompt').value}
+
+## Self-Check-In
+- Energy Level: ${energySlider.value}/5
+- Positivity/Mood: ${moodSlider.value}/5
+- Calmness: ${calmSlider.value}/5
+
+## Grounding Activity
+${document.getElementById('grounding').value}
+
+## Mother & Child Moments
+${document.getElementById('mother-child').value}
+                `;
+
+                const blob = new Blob([content.trim()], { type: 'text/plain;charset=utf-8' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `journal-entry-${date.toISOString().split('T')[0]}.txt`;
+                link.click();
+                URL.revokeObjectURL(link.href);
+            });
+
+            // Peace Corner - Emotion Chart
+            const emotions = [
+                { name: 'Happy', emoji: '??', info: 'Feeling joyful and content. Embrace this feeling and share it!' },
+                { name: 'Sad', emoji: '??', info: 'It\'s okay to feel down. Allow yourself to feel it, and know it will pass.' },
+                { name: 'Angry', emoji: '??', info: 'A powerful emotion. Try deep breaths or physical activity to channel it.' },
+                { name: 'Scared', emoji: '??', info: 'Fear is a signal. Acknowledge it and seek comfort or safety.' },
+                { name: 'Calm', emoji: '??', info: 'A state of peace. Notice what helps you feel this way.' },
+                { name: 'Loved', emoji: '??', info: 'Feeling connected and cared for. Cherish these moments.' }
+            ];
+            const emotionGrid = document.getElementById('emotion-grid');
+            const emotionInfo = document.getElementById('emotion-info');
+            emotions.forEach(emotion => {
+                const button = document.createElement('button');
+                button.className = 'p-3 bg-rose-50 rounded-lg hover:bg-purple-100 focus:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-400 transition';
+                button.innerHTML = `<div class="text-3xl">${emotion.emoji}</div><div class="text-xs font-semibold">${emotion.name}</div>`;
+                button.addEventListener('click', () => {
+                    emotionInfo.innerHTML = `<p>${emotion.info}</p>`;
+                });
+                emotionGrid.appendChild(button);
+            });
+
+            // Peace Corner - Gratitude Jar
+            const gratitudeInput = document.getElementById('gratitude-input');
+            const addGratitudeBtn = document.getElementById('add-gratitude-btn');
+            const gratitudeJar = document.getElementById('gratitude-jar');
+            addGratitudeBtn.addEventListener('click', () => {
+                const noteText = gratitudeInput.value.trim();
+                if (noteText) {
+                    const note = document.createElement('div');
+                    note.className = 'bg-white p-2 rounded-md shadow text-sm text-slate-700 border border-purple-100 transform -rotate-2 hover:rotate-0 transition-transform';
+                    note.textContent = noteText;
+                    gratitudeJar.appendChild(note);
+                    gratitudeInput.value = '';
+                }
+            });
+            
+            // Peace Corner - Checklists
+            const groundingChecklistData = [
+                "Take 5 deep, slow breaths.",
+                "Sip a glass of water.",
+                "Listen to a calming sound.",
+                "Feel a comforting texture.",
+                "Stretch your body.",
+                "Repeat your daily affirmation.",
+                "Connect with your child.",
+                "Acknowledge the feeling and release."
+            ];
+            const groundingList = document.getElementById('grounding-checklist');
+            groundingChecklistData.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.className = 'flex items-center';
+                const checkboxId = `check-${index}`;
+                li.innerHTML = `
+                    <input id="${checkboxId}" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                    <label for="${checkboxId}" class="ml-3 block text-sm text-slate-600">${item}</label>
+                `;
+                groundingList.appendChild(li);
+            });
+
+            // Print functionality
+            document.querySelectorAll('.print-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const printArea = e.target.closest('.print-area-container').querySelector('.print-area');
+                    
+                    // Clone the area to avoid modifying the original
+                    const clonedPrintArea = printArea.cloneNode(true);
+                    
+                    // Create a temporary container for the cloned content
+                    const printContainer = document.createElement('div');
+                    printContainer.classList.add('print-area');
+                    printContainer.appendChild(clonedPrintArea);
+                    document.body.appendChild(printContainer);
+                    
+                    window.print();
+                    
+                    document.body.removeChild(printContainer);
+                });
+            });
+
+            updateChart(); // Initial chart render
+        });
+    </script>
+</body>
+</html>
